@@ -1,0 +1,89 @@
+[
+{
+    "email": "organizer@example.com",
+    "password": "organizer123",
+    "role": "organizer"
+},
+{
+    "email": "attendee@example.com",
+    "password": "attendee123",
+    "role": "attendee"
+},
+{
+    "id": 1,
+    "name": "Tech Conference 2024",
+    "type": "Technology",
+    "date": "2024-09-15T09:00",
+    "location": "New York Convention Center",
+    "capacity": 500,
+    "price": 199.99,
+    "description": "Join industry leaders for a deep dive into emerging tech trends.",
+    "image": "https://www.smpte.org/hs-fs/hubfs/UK%20Conference%202024.png?width=1422&height=850&name=UK%20Conference%202024.png"
+  },
+  {
+    "id": 2,
+    "name": "Music Festival",
+    "type": "Entertainment",
+    "date": "2024-08-22T18:00",
+    "location": "Los Angeles Park",
+    "capacity": 1000,
+    "price": 59.99,
+    "description": "Experience an unforgettable night with top artists and bands.",
+    "image": "https://thevoiceofblackcincinnati.com/wp-content/uploads/2022/02/cmf1.jpg"
+  },
+    {
+    "id": 3,
+    "name": "Startup Pitch Night",
+    "type": "Business",
+    "date": "2024-10-10T17:30",
+    "location": "San Francisco HQ",
+    "capacity": 200,
+    "price": 25,
+    "description": "Network with investors and pitch your startup for funding opportunities.",
+    "image": "https://www.eu-startups.com/wp-content/uploads/2023/03/Pitch-Night-VU-2.png"
+  },
+  {
+    "id": 4,
+    "name": "AI & Machine Learning Summit",
+    "type": "Technology",
+    "date": "2024-11-05T10:00",
+    "location": "Boston Tech Center",
+    "capacity": 300,
+    "price": 150,
+    "description": "Discover the latest advancements in AI and machine learning from industry leaders.",
+    "image": "https://d1.awsstatic.com/events/summit-2021/ml-summit/2021_ML_Mid_Page_Banner_Logo.0ad235e140e9863646e816d684f27df405593255.png"
+  },
+  {
+    "id": 5,
+    "name": "AI & Machine Learning Summit",
+    "type": "Technology",
+    "date": "2024-11-05T10:00",
+    "location": "Boston Tech Center",
+    "capacity": 300,
+    "price": 150,
+    "description": "Discover the latest advancements in AI and machine learning from industry leaders.",
+    "image": "https://d1.awsstatic.com/events/summit-2021/ml-summit/2021_ML_Mid_Page_Banner_Logo.0ad235e140e9863646e816d684f27df405593255.png"
+  },
+  {
+    "id": 5,
+    "name": "Music Festival",
+    "type": "Entertainment",
+    "date": "2024-08-22T18:00",
+    "location": "Los Angeles Park",
+    "capacity": 1000,
+    "price": 59.99,
+    "description": "Experience an unforgettable night with top artists and bands.",
+    "image": "https://thevoiceofblackcincinnati.com/wp-content/uploads/2022/02/cmf1.jpg"
+  },
+  {
+    "id": 6,
+    "name": "Startup Pitch Night",
+    "type": "Business",
+    "date": "2024-10-10T17:30",
+    "location": "San Francisco HQ",
+    "capacity": 200,
+    "price": 25,
+    "description": "Network with investors and pitch your startup for funding opportunities.",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5tQ12PSnCoddAex78SEyu9krIeJSMBVjwdg&s"
+  }
+]
