@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .event-img {
+            width: 100%;       
+            height: 300px;    
+            object-fit: cover; 
+        }
+    </style>
+</head>
+<body>
+  <div class="container my-4">
+    <h1 class="text-center mb-4">Manage Your Events</h1>
+
+ 
+    <div class="text-center mb-3">
+      <button id="btn-createEvent" class="btn btn-success">Create a New Event</button>
+    </div>
+
+   
+    <div id="frmNewEventContainer" class="d-none">
+      <h2 class="mb-3">Add an Event</h2>
+      <form id="frmCreateEvent">
+        <div class="row">
+          <div class="col-md-6 mb-2">
+            <label for="eventName" class="form-label"><strong>Event Name</strong></label>
+            <input type="text" id="eventName" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-2">
+            <label for="eventType" class="form-label"><strong>Type of Event</strong></label>
+            <input type="text" id="eventType" class="form-control" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-2">
+            <label for="eventDate" class="form-label"><strong>Date & Time</strong></label>
+            <input type="datetime-local" id="eventDate" class="form-control" required>
+          </div>
+          <div class="col-md-4 mb-2">
+            <label for="eventLocation" class="form-label"><strong>Location</strong></label>
+            <input type="text" id="eventLocation" class="form-control" required>
+          </div>
+          <div class="col-md-4 mb-2">
+            <label for="eventCapacity" class="form-label"><strong>Max Attendees</strong></label>
+            <input type="number" id="eventCapacity" class="form-control" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-2">
+            <label for="eventPrice" class="form-label"><strong>Price ($)</strong></label>
+            <input type="number" id="eventPrice" class="form-control" required>
+          </div>
+          <div class="col-md-8 mb-2">
+            <label for="eventDescription" class="form-label"><strong>Description</strong></label>
+            <textarea id="eventDescription" class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 mb-2">
+            <label for="eventImage" class="form-label"><strong>Image URL</strong></label>
+            <input type="url" id="eventImage" class="form-control" placeholder="Enter image URL" required>
+          </div>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary">Save Event</button>
+          <button type="button" id="cancelEventCreation" class="btn btn-danger">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-4" id="event-container"></div>
+
+    <div class="text-center my-4">
+      <button id="load-more" class="btn btn-primary">Load More</button>
+    </div>
+  </div>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const storage_url = "https://jsonblob.com/api/1345098910003290112"; 
+    let events = [];
+
+    const eventContainer = document.getElementById("event-container");
+    const btnCreateEvent = document.getElementById("btn-createEvent");
+    const frmNewEventContainer = document.getElementById("frmNewEventContainer");
+    const frmCreateEvent = document.getElementById("frmCreateEvent");
+    const cancelEventCreation = document.getElementById("cancelEventCreation");
+
+    btnCreateEvent.addEventListener("click", () => {
+      frmNewEventContainer.classList.remove("d-none");
+    });
+
+    cancelEventCreation.addEventListener("click", () => {
+      frmNewEventContainer.classList.add("d-none");
+      frmCreateEvent.reset();
+    });
+
+    async function fetchEvents() {
+      try {
+        const response = await fetch(storage_url);
+        events = await response.json();
+        renderEvents();
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    }
+
+    frmCreateEvent.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const newEvent = {
+        id: events.length + 1,
+        name: document.getElementById("eventName").value,
+        type: document.getElementById("eventType").value,
+        date: document.getElementById("eventDate").value,
+        location: document.getElementById("eventLocation").value,
+        capacity: document.getElementById("eventCapacity").value,
+        price: document.getElementById("eventPrice").value,
+        description: document.getElementById("eventDescription").value,
+        image: document.getElementById("eventImage").value
+      };
+
+      events.push(newEvent);
+      await saveEventsToJSONBlob();
+      renderEvents();
+      frmNewEventContainer.classList.add("d-none");
+      frmCreateEvent.reset();
+    });
+
+    async function saveEventsToJSONBlob() {
+      await fetch(storage_url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(events)
+      });
+    }
+
+    function renderEvents() {
+      eventContainer.innerHTML = events.map(createEventCard).join("");
+    }
+
+    function createEventCard(event) {
+      return `
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img src="${event.image}" class="card-img-top event-img" alt="${event.name}">
+            <div class="card-body">
+              <h4 class="card-title">${event.name}</h4>
+              <p><strong>Type:</strong> ${event.type}</p>
+              <p><strong>Date:</strong> ${event.date}</p>
+              <p><strong>Location:</strong> ${event.location}</p>
+              <p><strong>Max Attendees:</strong> ${event.capacity}</p>
+              <p><strong>Price:</strong> $${event.price}</p>
+              <button class="btn btn-info view-details">View Details</button>
+              <button class="btn btn-warning edit-event">Edit</button>
+              <button class="btn btn-danger delete-event">Delete</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    fetchEvents();
+  </script>
+</body>
+</html>
