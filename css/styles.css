@@ -1,0 +1,30 @@
+#header-image {
+    width: 100%;
+    height: 17.5em;
+    overflow: hidden;
+    margin: auto;
+    margin-top: 2%;
+}
+.light-bg{
+    background-color: lightgray;
+}
+.details-container{
+    background-color: white;
+    height: 100%;
+}
+#registerButton{
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    width: 20%;
+}
+.center{
+    align-items: center;
+    text-align: center;
+}
+hr{
+    background-color: black;
+    height: 5px;
+    border: 0;
+}
