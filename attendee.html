@@ -56,7 +56,6 @@
     <div class="mb-3">
         <input type="text" id="searchBar" class="form-control" placeholder="Search for events...">
     </div>
-
   
     <div class="row row-cols-1 row-cols-md-3 g-4" id="event-container"></div>
 
@@ -71,6 +70,42 @@
                 <div class="modal-body" id="eventModalBody"></div>
             </div>
         </div>
+    </div>
+  </div>
+
+  <!--Modal to show event details-->
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="detailsModal">Modal title</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <img id="details-image" src="img/placeholder_img.jpg">
+            </div>
+            <div class="row p-2">
+                <div class="col">
+                    <h1 id="detailsEventName">Event Title</h1>
+                </div>
+                <div class="col">
+                    <p id="detailsOrgName" class="fs-2">Organizer Name</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <h3 id="detailsLocation" class="text-secondary-emphasis">Event Location</h2>
+            </div>
+            <div class="row">
+                <p id="detailsDescription" class="text-secondary fs-5">Event Description</h2>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary register-event" data-id="${event.id}">Register</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -114,7 +149,7 @@
                         <h4 class="card-title">${event.name}</h4>
                         <p><strong>Date:</strong> ${event.date}</p>
                         <p><strong>Location:</strong> ${event.location}</p>
-                        <button class="btn btn-info view-details" data-id="${event.id}">View Details</button>
+                        <button class="btn btn-info view-details" data-id="${event.id}" id="${event.id} onclick="setDetailModal(this.id)">View Details</button>
                         <button class="btn btn-primary register-event" data-id="${event.id}">Register</button>
                         <i class="fa-regular fa-heart favorite ${isFavorite}" data-id="${event.id}"></i>
                         <i class="fa-solid fa-share-nodes share" data-id="${event.id}" title="Share this event"></i>
@@ -122,6 +157,7 @@
                 </div>
             </div>
         `;
+        //added onlcik and id to button for getting data when button is clicked
     }
 
     function showNotification(message) {
@@ -161,8 +197,32 @@
     searchBar.addEventListener("keyup", () => {
         renderEvents(searchBar.value);
     });
-
+    
     fetchEvents();
+
+    //Shows the event detail modal
+    function showDetailModal(){
+        var modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+        modal.show();
+    }
+
+    //gets JSON data for use in the modal
+    async function getDetailData() {
+        const request = new Request(storage_url);
+        const response = await fetch(request);
+        let data = await response.json();
+        return data; 
+    }
+    
+    //Sets modal text to JSON data
+    function setDetailModal(buttonId){
+        console.log("A");
+        var detailData = getDetailData()
+        var stringData = JSON.stringify(detailData)
+        console.log(detailData);
+        showDetailModal();
+    }
+
   </script>
 </body>
 </html>
