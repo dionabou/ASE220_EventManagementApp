@@ -98,7 +98,7 @@
         <div class="row">
           <div class="col-md-4 mb-2">
             <label for="eventPrice" class="form-label"><strong>Price ($)</strong></label>
-            <input type="number" id="eventPrice" class="form-control" required>
+            <input type="number" step ="0.01" id="eventPrice" class="form-control" required>
           </div>
           <div class="col-md-8 mb-2">
             <label for="eventDescription" class="form-label"><strong>Description</strong></label>
@@ -252,7 +252,7 @@
               <p><strong>Location:</strong> ${event.location}</p>
               <p><strong>Max Attendees:</strong> ${event.capacity}</p>
               <p><strong>Price:</strong> $${event.price}</p>
-              <button class="btn btn-info view-details" id="${event.id}">View Details</button>
+              <button class="btn btn-info view-details" id="${event.id}" onclick='setDetailModal(this.id)'>View Details</button>
               <button class="btn btn-warning edit-event">Edit</button>
               <button class="btn btn-danger delete-event">Delete</button>
             </div>
@@ -277,7 +277,7 @@
           const data = await response.json();
           return data;
       } catch (error) {
-          console.error('Error fetching or parsing data:', error);
+          console.error('Error fetching data:', error);
           return null;
       }
     }
