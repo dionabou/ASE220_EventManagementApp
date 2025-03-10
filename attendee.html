@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,10 +43,24 @@
             display: none;
             z-index: 1000;
         }
+        #details-image {
+            width: 100%;
+            height: 30em;
+            object-fit: cover;
+            margin: auto;
+            margin-top: 2%;
+            border-radius: 3em;
+        }
+        .card {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-width: 2px;
+        }
     </style>
 </head>
 <body>
-  <div class="container my-4">
+  <div class="container my-4 ">
     <h1 class="text-center mb-4">Browse Events</h1>
 
    
@@ -56,7 +70,6 @@
     <div class="mb-3">
         <input type="text" id="searchBar" class="form-control" placeholder="Search for events...">
     </div>
-
   
     <div class="row row-cols-1 row-cols-md-3 g-4" id="event-container"></div>
 
@@ -71,6 +84,49 @@
                 <div class="modal-body" id="eventModalBody"></div>
             </div>
         </div>
+    </div>
+  </div>
+
+  <!--Modal to show event details-->
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="detailsModal">Event Details</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <img id="details-image" src="">
+            </div>
+            <hr>
+            <div class="row p-2 justify-content-between">
+                <div class="col">
+                    <h1 id="detailsEventName">Event Title</h1>
+                </div>
+                <div class="col-2"></div>
+                <div class="col-3">
+                    <p id="detailsPrice" class="fs-5">Price</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row p-2 justify-content-between">
+                <div class="col">
+                    <h3 id="detailsLocation" class="text-secondary-emphasis">Location:</h3>
+                </div>
+                <div class="col-3">
+                    <h5 id="detailsCapacity" class="text-secondary-emphasis">Capacity:</h5>
+                </div>
+            </div>
+            <div class="row">
+                <p id="detailsDescription" class="text-secondary fs-5">Event Description</h2>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary register-event" data-id="${event.id}">Register</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -114,7 +170,7 @@
                         <h4 class="card-title">${event.name}</h4>
                         <p><strong>Date:</strong> ${event.date}</p>
                         <p><strong>Location:</strong> ${event.location}</p>
-                        <button class="btn btn-info view-details" data-id="${event.id}">View Details</button>
+                        <button class="btn btn-info view-details" data-id="${event.id}" id="${event.id}" onclick='setDetailModal(this.id)'>View Details</button>
                         <button class="btn btn-primary register-event" data-id="${event.id}">Register</button>
                         <i class="fa-regular fa-heart favorite ${isFavorite}" data-id="${event.id}"></i>
                         <i class="fa-solid fa-share-nodes share" data-id="${event.id}" title="Share this event"></i>
@@ -161,8 +217,50 @@
     searchBar.addEventListener("keyup", () => {
         renderEvents(searchBar.value);
     });
-
+    
     fetchEvents();
+
+    // Shows the event detail modal
+    function showDetailModal(){
+        var modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+        modal.show();
+    }
+
+    // Gets JSON data for use in the modal
+    async function getDetailData() {
+        try {
+            const response = await fetch(storage_url);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching or parsing data:', error);
+            return null;
+        }
+    }
+
+    // Sets modal text to JSON data
+        async function setDetailModal(buttonId){
+            const eventId = Number(buttonId); 
+            var detailData = await getDetailData();
+            if (!detailData) {
+                console.error("Failed to fetch data.");
+                return;
+            }
+            const event = detailData.find(item => item.id === eventId);
+            if (event) {
+                document.getElementById('detailsEventName').innerHTML = `${event.name}`;
+                document.getElementById('detailsLocation').innerHTML = `${event.location}`;
+                document.getElementById('detailsDescription').innerHTML = `${event.description}`;
+                document.getElementById('details-image').src = `${event.image}`;
+                document.getElementById('detailsPrice').innerHTML = `Entry Price:<br><span class="fs-3">$${event.price}</span>`;
+                document.getElementById('detailsCapacity').innerHTML = `Capacity: ${event.capacity}`;
+            } else {
+                console.log("Event not found");
+            }
+
+            // Show modal
+            showDetailModal();
+        }
   </script>
 </body>
 </html>
