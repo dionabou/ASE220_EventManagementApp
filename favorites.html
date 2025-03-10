@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favorite Events</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .favorite-icon {
+            color: #ff4757;
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
+        .sidebar {
+            height: 100vh;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .event-card {
+            transition: all 0.3s ease;
+        }
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .empty-favorites {
+            text-align: center;
+            padding: 50px 20px;
+        }
+        .back-button {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar p-3">
+                <h3 class="mb-4"><i class="fa-solid fa-heart favorite-icon"></i>My Favorites</h3>
+                <div class="mb-4">
+                    <button id="btnBack" class="btn btn-outline-primary back-button">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Events
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <input type="text" id="searchFavorites" class="form-control" placeholder="Search favorites...">
+                </div>
+                <hr>
+                <div id="favoritesList">
+                    <!-- Favorite events list will be populated here -->
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4 py-3">
+                <h1 class="mb-4">My Favorite Events</h1>
+                
+                <div class="row" id="favoritesContainer">
+                    <!-- Favorite events cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModal" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">Event Details</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <img id="details-image" src="">
+                    </div>
+                    <hr>
+                    <div class="row p-2 justify-content-between">
+                        <div class="col">
+                            <h1 id="detailsEventName">Event Title</h1>
+                        </div>
+                        <div class="col-2"></div>
+                        <div class="col-3">
+                            <p id="detailsPrice" class="fs-5">Price</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row p-2 justify-content-between">
+                        <div class="col">
+                            <h3 id="detailsLocation" class="text-secondary-emphasis">Location:</h3>
+                        </div>
+                        <div class="col-3">
+                            <h5 id="detailsCapacity" class="text-secondary-emphasis">Capacity:</h5>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <p id="detailsDescription" class="text-secondary fs-5">Event Description</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary register-event">Register</button>
+                    <button type="button" class="btn btn-danger remove-favorite">Remove from Favorites</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const storage_url = "https://jsonblob.com/api/1345098910003290112";
+        let allEvents = [];
+        let favoriteEvents = {};
+        let currentEventId = null;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load favorites from localStorage
+            favoriteEvents = JSON.parse(localStorage.getItem("favorites")) || {};
+            
+            // Fetch all events
+            await fetchEvents();
+            
+            // Initialize event listeners
+            initEventListeners();
+        });
+
+        async function fetchEvents() {
+            try {
+                const response = await fetch(storage_url);
+                let data = await response.json();
+                allEvents = data.filter(item => item.id && item.name && item.image);
+                renderFavorites();
+            } catch (error) {
+                console.error("Error fetching events:", error);
+            }
+        }
+
+        function renderFavorites(searchTerm = "") {
+            const favoritesContainer = document.getElementById("favoritesContainer");
+            const favoritesList = document.getElementById("favoritesList");
+            
+            // Get only favorited events
+            const myFavorites = allEvents.filter(event => favoriteEvents[event.id]);
+            
+            // Filter by search term if provided
+            const filteredFavorites = searchTerm 
+                ? myFavorites.filter(event => event.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                : myFavorites;
+            
+            if (filteredFavorites.length === 0) {
+                favoritesContainer.innerHTML = `
+                    <div class="col-12 empty-favorites">
+                        <i class="fa-regular fa-heart fa-3x mb-3"></i>
+                        <h3>No favorite events found</h3>
+                        <p>Add events to your favorites to see them here.</p>
+                        <a href="attendee.html" class="btn btn-primary">Browse Events</a>
+                    </div>
+                `;
+                favoritesList.innerHTML = `<p class="text-muted">No favorites found</p>`;
+            } else {
+                // Render main content cards
+                favoritesContainer.innerHTML = filteredFavorites.map(event => `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card event-card">
+                            <img src="${event.image}" class="card-img-top event-img" alt="${event.name}">
+                            <div class="card-body">
+                                <h4 class="card-title">${event.name}</h4>
+                                <p><strong>Date:</strong> ${formatDate(event.date)}</p>
+                                <p><strong>Location:</strong> ${event.location}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <button class="btn btn-info view-details" data-id="${event.id}">View Details</button>
+                                    <button class="btn btn-danger remove-from-favorites" data-id="${event.id}">
+                                        <i class="fa-solid fa-heart-crack"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join("");
+                
+                // Render sidebar list
+                favoritesList.innerHTML = filteredFavorites.map(event => `
+                    <div class="d-flex align-items-center mb-2 p-2 border-bottom">
+                        <i class="fa-solid fa-heart favorite-icon"></i>
+                        <a href="#" class="sidebar-event" data-id="${event.id}">${event.name}</a>
+                    </div>
+                `).join("");
+            }
+        }
+
+        function initEventListeners() {
+            // Back button
+            document.getElementById("btnBack").addEventListener("click", () => {
+                window.location.href = "attendee.html";
+            });
+            
+            // Search favorites
+            document.getElementById("searchFavorites").addEventListener("keyup", (e) => {
+                renderFavorites(e.target.value);
+            });
+            
+            // Event delegation for dynamically created elements
+            document.addEventListener("click", (e) => {
+                // View details
+                if (e.target.classList.contains("view-details")) {
+                    const eventId = parseInt(e.target.getAttribute("data-id"));
+                    showEventDetails(eventId);
+                }
+                
+                // Remove from favorites (from main content)
+                if (e.target.classList.contains("remove-from-favorites") || 
+                    e.target.parentElement.classList.contains("remove-from-favorites")) {
+                    const eventId = parseInt(
+                        e.target.getAttribute("data-id") || 
+                        e.target.parentElement.getAttribute("data-id")
+                    );
+                    removeFromFavorites(eventId);
+                }
+                
+                // Sidebar event click
+                if (e.target.classList.contains("sidebar-event")) {
+                    e.preventDefault();
+                    const eventId = parseInt(e.target.getAttribute("data-id"));
+                    showEventDetails(eventId);
+                }
+                
+                // Remove from favorites (from modal)
+                if (e.target.classList.contains("remove-favorite")) {
+                    removeFromFavorites(currentEventId);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
+                    modal.hide();
+                }
+            });
+        }
+
+        function showEventDetails(eventId) {
+            currentEventId = eventId;
+            const event = allEvents.find(ev => ev.id === eventId);
+            
+            if (event) {
+                document.getElementById('detailsEventName').innerHTML = event.name;
+                document.getElementById('detailsLocation').innerHTML = event.location;
+                document.getElementById('detailsDescription').innerHTML = event.description;
+                document.getElementById('details-image').src = event.image;
+                document.getElementById('detailsPrice').innerHTML = `Entry Price:<br><span class="fs-3">$${event.price}</span>`;
+                document.getElementById('detailsCapacity').innerHTML = `Capacity: ${event.capacity}`;
+                
+                // Set register button event ID
+                const registerButton = document.querySelector('.register-event');
+                registerButton.setAttribute('data-id', eventId);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                modal.show();
+            }
+        }
+
+        function removeFromFavorites(eventId) {
+            // Remove from favorites
+            delete favoriteEvents[eventId];
+            
+            // Update localStorage
+            localStorage.setItem("favorites", JSON.stringify(favoriteEvents));
+            
+            // Re-render favorites
+            renderFavorites(document.getElementById("searchFavorites").value);
+        }
+
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString();
+            } catch (e) {
+                return dateString;
+            }
+        }
+    </script>
+</body>
+</html>
