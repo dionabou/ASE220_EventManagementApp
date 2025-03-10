@@ -254,7 +254,7 @@
               <p><strong>Price:</strong> $${event.price}</p>
               <button class="btn btn-info view-details" id="${event.id}" onclick='setDetailModal(this.id)'>View Details</button>
               <button class="btn btn-warning edit-event">Edit</button>
-              <button class="btn btn-danger delete-event">Delete</button>
+              <button class="btn btn-danger delete-event" id="${event.id}" onclick='deleteEvent(this.id)'>Delete</button>
             </div>
           </div>
         </div>
@@ -304,6 +304,20 @@
 
       // Show modal
       showDetailModal();
+    }
+
+    async function deleteEvent(buttonId){
+      const eventId = Number(buttonId); 
+      var data = await getDetailData();
+      const event = data.find(item => item.id === eventId);
+      data = data.filter(item => item.id !== event.id);
+      console.log(JSON.stringify(data));
+      await fetch(storage_url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      fetchEvents();
     }
   </script>
 </body>
