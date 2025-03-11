@@ -92,13 +92,13 @@
     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5tQ12PSnCoddAex78SEyu9krIeJSMBVjwdg&s"
   },
   {
-    "email": "dixonj20@mymail.nku.edu",
+    "email": "[REDACTED]",
     "password": "0000",
     "role": "organizer",
     "createdEvents": []
   },
   {
-    "email": "elmaneb1@mymail.nku.edu",
+    "email": "{REDACTED}",
     "password": "ASE@NKU",
     "role": "attendee",
     "registered": []
