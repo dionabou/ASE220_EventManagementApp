@@ -1,4 +1,4 @@
-/* Global Styles */
+
 :root {
   --primary-color: #007bff;
   --secondary-color: #6c757d;
@@ -24,7 +24,7 @@ body {
   background-color: var(--light-color);
 }
 
-/* Container Styles */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -40,7 +40,7 @@ body {
   box-shadow: var(--box-shadow);
 }
 
-/* Card Styles */
+
 .card {
   display: block;
   width: 100%;
@@ -66,7 +66,7 @@ body {
   font-weight: 600;
 }
 
-/* Image Styles */
+
 .event-img {
   width: 100%;
   height: 250px;
@@ -82,7 +82,7 @@ body {
   border-radius: 3em;
 }
 
-/* Form Styles */
+
 .form-control {
   display: block;
   width: 100%;
@@ -111,7 +111,7 @@ body {
   font-weight: 500;
 }
 
-/* Button Styles */
+
 .btn {
   display: inline-block;
   font-weight: 400;
@@ -222,7 +222,7 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Registration Button */
+
 #registerButton {
   display: block;
   width: 200px;
@@ -244,7 +244,7 @@ body {
   box-shadow: 0 5px 15px rgba(0, 0, 255, 0.2);
 }
 
-/* Utility Classes */
+
 .center {
   display: flex;
   justify-content: center;
@@ -468,7 +468,7 @@ body {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Detail page styles */
+
 .details-container {
     max-width: 1000px;
     margin: 20px auto;
@@ -506,7 +506,7 @@ body {
     padding: 20px 0;
 }
 
-/* Light theme background */
+
 .light-bg {
     background-color: #f5f7fa;
 }
