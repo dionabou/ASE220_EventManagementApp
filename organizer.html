@@ -164,7 +164,6 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary register-event" data-id="${event.id}">Register</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
@@ -261,7 +260,7 @@
               <p><strong>Location:</strong> ${event.location}</p>
               <p><strong>Price:</strong> $${event.price}</p>
               <button class="btn btn-info view-details" id="${event.id}" onclick='setDetailModal(this.id)'>View Details</button>
-              <button class="btn btn-warning edit-event">Edit</button>
+              <button class="btn btn-warning edit-event" onclick="editEvent(${event.id})">Edit</button>
               <button class="btn btn-danger delete-event" id="${event.id}" onclick='deleteEvent(this.id)'>Delete</button>
             </div>
           </div>
@@ -286,6 +285,44 @@
         </div>
       `;
     }
+
+    async function editEvent(eventId) {
+      var data = await getDetailData();
+      const event = data.find(item => item.id === eventId);
+      if (!event) {return;}
+
+      document.getElementById("eventName").value = event.name;
+      document.getElementById("eventType").value = event.type;
+      document.getElementById("eventDate").value = event.date;
+      document.getElementById("eventLocation").value = event.location;
+      document.getElementById("eventCapacity").value = event.capacity;
+      document.getElementById("eventPrice").value = event.price;
+      document.getElementById("eventDescription").value = event.description;
+      document.getElementById("eventImage").value = event.image;
+
+      frmNewEventContainer.classList.remove("d-none");
+      const saveButton = document.querySelector("#frmCreateEvent button[type='submit']");
+      saveButton.textContent = "Update Event";
+      saveButton.onclick = async (e) => {
+        e.preventDefault();
+        
+        event.name = document.getElementById("eventName").value;
+        event.type = document.getElementById("eventType").value;
+        event.date = document.getElementById("eventDate").value;
+        event.location = document.getElementById("eventLocation").value;
+        event.capacity = document.getElementById("eventCapacity").value;
+        event.price = document.getElementById("eventPrice").value;
+        event.description = document.getElementById("eventDescription").value;
+        event.image = document.getElementById("eventImage").value;
+
+        await saveEventsToJSONBlob(data);
+        frmNewEventContainer.classList.add("d-none");
+        frmCreateEvent.reset();
+        viewCreated();
+      };
+      saveButton.textContent.reset();
+    }
+
 
     // Shows the event detail modal
     function showDetailModal(){
