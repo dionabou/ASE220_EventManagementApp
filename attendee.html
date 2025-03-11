@@ -70,13 +70,14 @@
     <div class="mb-3">
         <input type="text" id="searchBar" class="form-control" placeholder="Search for events...">
     </div>
-  
-    <div class="m-3">
-        <button class="btn btn-info" onclick="viewRegistered()">Registered Events</button>
-    </div>
 
+    <h2 id="reg-event-header">Registered Events</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="reg-event-container"></div>
+
+    <hr class="m-5">
+
+    <h2 id="other-event-header">Other Events</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4" id="event-container"></div>
-
     
     <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -143,28 +144,33 @@
     let eventRatings = JSON.parse(localStorage.getItem("ratings")) || {};
 
     let eventContainer = document.getElementById("event-container");
+    let regEventContainer = document.getElementById("reg-event-container");
+    let regEventHeader = document.getElementById("reg-event-header");
+    let eventHeader = document.getElementById("other-event-header");
     let searchBar = document.getElementById("searchBar");
     let notification = document.getElementById("notification");
 
-    async function fetchEvents() {
-        try {
-            const response = await fetch(storage_url);
-            let data = await response.json();
-            events = data.filter(item => item.id && item.name && item.image);
-            renderEvents();
-        } catch (error) {
-            console.error("Error fetching events:", error);
-        }
+    function createRegEventCard(event) {
+        const isFavorite = favoriteEvents[event.id] ? "active" : "";
+        return `
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="${event.image}" class="card-img-top event-img" alt="${event.name}">
+                    <div class="card-body">
+                        <h4 class="card-title">${event.name}</h4>
+                        <p><strong>Date:</strong> ${event.date}</p>
+                        <p><strong>Location:</strong> ${event.location}</p>
+                        <p><strong>Price:</strong> $${event.price}</p>
+                        <button class="btn btn-info view-details" data-id="${event.id}" id="${event.id}" onclick='setDetailModal(this.id)'>View Details</button>
+                        <i class="fa-regular fa-heart favorite ${isFavorite}" data-id="${event.id}"></i>
+                        <i class="fa-solid fa-share-nodes share" data-id="${event.id}" title="Share this event"></i>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
-    function renderEvents(filter = "") {
-        eventContainer.innerHTML = events
-            .filter(event => event.name.toLowerCase().includes(filter.toLowerCase()))
-            .map(createEventCard)
-            .join("");
-    }
-
-    function createEventCard(event) {
+    function createOtherEventCard(event) {
         const isFavorite = favoriteEvents[event.id] ? "active" : "";
         return `
             <div class="col-md-4 mb-4">
@@ -220,10 +226,14 @@
     });
 
     searchBar.addEventListener("keyup", () => {
-        renderEvents(searchBar.value);
+        if (searchBar.value != ""){
+            viewRegistered(searchBar.value);
+            viewOthers(searchBar.value);
+        }
     });
     
-    fetchEvents();
+    viewRegistered();
+    viewOthers();
 
     // Shows the event detail modal
     function showDetailModal(){
@@ -285,9 +295,11 @@
                     body: JSON.stringify(detailData)
                 });
             }
+            viewRegistered();
+            viewOthers();
         }
 
-        async function viewRegistered() {
+        async function viewRegistered(filter = "") {
             try {
                 const response = await fetch(storage_url);
                 const data = await response.json();
@@ -296,13 +308,28 @@
                 let userEmail = userParse.email;
                 const user = data.find(item => item.email === userEmail);
                 const registeredEventIds = user.registered;
-                const registeredEvents = data.filter(event => registeredEventIds.includes(event.id));
-                eventContainer.innerHTML = registeredEvents.map(createEventCard).join("");
+                const registeredEvents = data.filter(event => registeredEventIds.includes(event.id) && event.name.toLowerCase().includes(filter.toLowerCase()));
+                regEventContainer.innerHTML = registeredEvents.map(createRegEventCard).join("");
             } catch (error) {
                 console.error("Error fetching events", error);
             }
         }
 
+        async function viewOthers(filter = "") {
+            try {
+                const response = await fetch(storage_url);
+                const data = await response.json();
+                let userItem = sessionStorage.getItem('user');
+                let userParse = JSON.parse(userItem);
+                let userEmail = userParse.email;
+                const user = data.find(item => item.email === userEmail);
+                const registeredEventIds = user.registered;
+                const registeredEvents = data.filter(event => !registeredEventIds.includes(event.id) && (event.id && event.name && event.image) && event.name.toLowerCase().includes(filter.toLowerCase()));
+                eventContainer.innerHTML = registeredEvents.map(createOtherEventCard).join("");
+            } catch (error) {
+                console.error("Error fetching events", error);
+            }
+        }
         
 
   </script>
