@@ -345,11 +345,7 @@
       const user = data.find(item => item.email === userEmail);
       user.createdEvents = user.createdEvents.filter(id => id !== eventId);
       
-      await fetch(storage_url, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      saveEventsToJSONBlob(data);
       viewCreated();
       viewOthers();
     }
@@ -387,21 +383,18 @@
     }
 
     async function addIdToCreated(idToAdd){
-      var detailData = await getDetailData();
-      if (!detailData) {
-          console.error("Failed to fetch data.");
-          return;
-      }
+      const response = await fetch(storage_url);
+      const data = await response.json();
       var userItem = sessionStorage.getItem('user');
       var userParse = JSON.parse(userItem);
       var userEmail = userParse.email
-      const user = detailData.find(item => item.email === userEmail);
+      const user = data.find(item => item.email === userEmail);
       console.log(user.createdEvents);
       user.createdEvents.push(idToAdd);
       await fetch(storage_url, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(detailData)
+          body: JSON.stringify(data)
       });
       viewOthers();
       viewCreated();
