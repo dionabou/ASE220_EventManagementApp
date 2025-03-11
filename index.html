@@ -104,6 +104,9 @@
             let email = document.getElementById("regEmail").value.trim();
             let password = document.getElementById("regPassword").value.trim();
             let role = document.getElementById("role").value;
+            let registered = [];
+            let createdEvents = [];
+            let newUser = {};
 
             try {
                 let response = await fetch(storage_url);
@@ -114,8 +117,10 @@
                     alert("Email already exists!");
                     return;
                 }
-
-                let newUser = { email, password, role };
+                
+                if (role === "attendee"){newUser = {email, password, role, registered};}
+                else {newUser = {email, password, role, createdEvents};}
+                
                 users.push(newUser);
 
                 await fetch(storage_url, {

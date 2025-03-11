@@ -71,6 +71,10 @@
         <input type="text" id="searchBar" class="form-control" placeholder="Search for events...">
     </div>
   
+    <div class="m-3">
+        <button class="btn btn-info" onclick="viewRegistered()">Registered Events</button>
+    </div>
+
     <div class="row row-cols-1 row-cols-md-3 g-4" id="event-container"></div>
 
     
@@ -171,7 +175,7 @@
                         <p><strong>Date:</strong> ${event.date}</p>
                         <p><strong>Location:</strong> ${event.location}</p>
                         <button class="btn btn-info view-details" data-id="${event.id}" id="${event.id}" onclick='setDetailModal(this.id)'>View Details</button>
-                        <button class="btn btn-primary register-event" data-id="${event.id}">Register</button>
+                        <button class="btn btn-primary register-event" data-id="${event.id}" id="${event.id}" onclick="register(this.id)">Register</button>
                         <i class="fa-regular fa-heart favorite ${isFavorite}" data-id="${event.id}"></i>
                         <i class="fa-solid fa-share-nodes share" data-id="${event.id}" title="Share this event"></i>
                     </div>
@@ -261,6 +265,45 @@
             // Show modal
             showDetailModal();
         }
+        async function register(buttonId){
+            const eventId = Number(buttonId); 
+            var detailData = await getDetailData();
+            if (!detailData) {
+                console.error("Failed to fetch data.");
+                return;
+            }
+            var userItem = sessionStorage.getItem('user');
+            var userParse = JSON.parse(userItem);
+            var userEmail = userParse.email
+            const user = detailData.find(item => item.email === userEmail);
+            if (!JSON.stringify(user.registered).includes(eventId)){
+            user.registered.push(eventId);
+            await fetch(storage_url, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(detailData)
+            });
+            }
+        }
+
+        async function viewRegistered() {
+            try {
+                const response = await fetch(storage_url);
+                const data = await response.json();
+                let userItem = sessionStorage.getItem('user');
+                let userParse = JSON.parse(userItem);
+                let userEmail = userParse.email;
+                const user = data.find(item => item.email === userEmail);
+                const registeredEventIds = user.registered;
+                const registeredEvents = data.filter(event => registeredEventIds.includes(event.id));
+                eventContainer.innerHTML = registeredEvents.map(createEventCard).join("");
+            } catch (error) {
+                console.error("Error fetching events:", error);
+            }
+        }
+
+        
+
   </script>
 </body>
 </html>
