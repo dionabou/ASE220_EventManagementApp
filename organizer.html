@@ -60,7 +60,7 @@
 </head>
 <body>
   <div class="container my-4">
-    <h1 class="text-center mb-4">Manage Your Events</h1>
+    <h1 class="text-center mb-4">Manage Events</h1>
 
  
     <div class="text-center mb-3">
@@ -118,7 +118,12 @@
       </form>
     </div>
 
+    <h2>Your Events</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-4" id="created-event-container"></div>
 
+    <hr class="m-5">
+
+    <h2>Other Events</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4 mt-4" id="event-container"></div>
 
     <div class="text-center my-4">
@@ -178,6 +183,7 @@
     let events = [];
 
     const eventContainer = document.getElementById("event-container");
+    const createdEventContainer = document.getElementById("created-event-container");
     const btnCreateEvent = document.getElementById("btn-createEvent");
     const frmNewEventContainer = document.getElementById("frmNewEventContainer");
     const frmCreateEvent = document.getElementById("frmCreateEvent");
@@ -205,6 +211,10 @@
 
     frmCreateEvent.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      const response = await fetch(storage_url);
+      let data = await response.json();
+      events = data.filter(item => item.id && item.name && item.image);
       
       const newEvent = {
         id: events.length + 1,
@@ -218,18 +228,20 @@
         image: document.getElementById("eventImage").value
       };
 
-      events.push(newEvent);
-      await saveEventsToJSONBlob();
-      renderEvents();
+      data.push(newEvent);
+      await saveEventsToJSONBlob(data);
+      
+      //viewCreated();
       frmNewEventContainer.classList.add("d-none");
       frmCreateEvent.reset();
+      addIdToCreated(events.length + 1);
     });
 
-    async function saveEventsToJSONBlob() {
+    async function saveEventsToJSONBlob(toSave) {
       await fetch(storage_url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(events)
+        body: JSON.stringify(toSave)
       });
     }
 
@@ -240,7 +252,7 @@
           .join("");
     }
 
-    function createEventCard(event) {
+    function createUserEventCard(event) {
       return `
         <div class="col-md-4 mb-4">
           <div class="card">
@@ -260,8 +272,23 @@
       `;
     }
 
-
-    fetchEvents();
+    function createOtherEventCard(event) {
+      return `
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img src="${event.image}" class="card-img-top event-img" alt="${event.name}">
+            <div class="card-body">
+              <h4 class="card-title">${event.name}</h4>
+              <p><strong>Type:</strong> ${event.type}</p>
+              <p><strong>Date:</strong> ${event.date}</p>
+              <p><strong>Location:</strong> ${event.location}</p>
+              <p><strong>Price:</strong> $${event.price}</p>
+              <button class="btn btn-info view-details" id="${event.id}" onclick='setDetailModal(this.id)'>View Details</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     // Shows the event detail modal
     function showDetailModal(){
@@ -311,13 +338,77 @@
       const event = data.find(item => item.id === eventId);
       data = data.filter(item => item.id !== event.id);
       console.log(JSON.stringify(data));
+
+      let userItem = sessionStorage.getItem('user');
+      let userParse = JSON.parse(userItem);
+      let userEmail = userParse.email;
+      const user = data.find(item => item.email === userEmail);
+      user.createdEvents = user.createdEvents.filter(id => id !== eventId);
+      
       await fetch(storage_url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
-      fetchEvents();
+      viewCreated();
+      viewOthers();
     }
+
+    async function viewCreated() {
+      try {
+          const response = await fetch(storage_url);
+          const data = await response.json();
+          let userItem = sessionStorage.getItem('user');
+          let userParse = JSON.parse(userItem);
+          let userEmail = userParse.email;
+          const user = data.find(item => item.email === userEmail);
+          const createdEventIds = user.createdEvents;
+          const createdEvents = data.filter(event => createdEventIds.includes(event.id));
+          createdEventContainer.innerHTML = createdEvents.map(createUserEventCard).join("");
+      } catch (error) {
+          console.error("Error fetching events", error);
+      }
+    }
+
+    async function viewOthers() {
+      try {
+          const response = await fetch(storage_url);
+          const data = await response.json();
+          let userItem = sessionStorage.getItem('user');
+          let userParse = JSON.parse(userItem);
+          let userEmail = userParse.email;
+          const user = data.find(item => item.email === userEmail);
+          const createdEventIds = user.createdEvents;
+          const otherEvents = data.filter(event => !createdEventIds.includes(event.id) && (event.id && event.name && event.image));
+          eventContainer.innerHTML = otherEvents.map(createOtherEventCard).join("");
+      } catch (error) {
+          console.error("Error fetching events", error);
+      }
+    }
+
+    async function addIdToCreated(idToAdd){
+      var detailData = await getDetailData();
+      if (!detailData) {
+          console.error("Failed to fetch data.");
+          return;
+      }
+      var userItem = sessionStorage.getItem('user');
+      var userParse = JSON.parse(userItem);
+      var userEmail = userParse.email
+      const user = detailData.find(item => item.email === userEmail);
+      console.log(user.createdEvents);
+      user.createdEvents.push(idToAdd);
+      await fetch(storage_url, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(detailData)
+      });
+      viewOthers();
+      viewCreated();
+    }
+
+    viewCreated();
+    viewOthers();
   </script>
 </body>
 </html>

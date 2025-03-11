@@ -95,10 +95,12 @@
     "email": "[REDACTED]",
     "password": "0000",
     "role": "organizer",
-    "createdEvents": []
+    "createdEvents": [
+        6 
+    ]
   },
   {
-    "email": "{REDACTED}",
+    "email": "[REDACTED]",
     "password": "ASE@NKU",
     "role": "attendee",
     "registered": []

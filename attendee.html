@@ -275,15 +275,15 @@
             }
             var userItem = sessionStorage.getItem('user');
             var userParse = JSON.parse(userItem);
-            var userEmail = userParse.email
+            var userEmail = userParse.email;
             const user = detailData.find(item => item.email === userEmail);
             if (!JSON.stringify(user.registered).includes(eventId)){
-            user.registered.push(eventId);
-            await fetch(storage_url, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(detailData)
-            });
+                user.registered.push(eventId);
+                await fetch(storage_url, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(detailData)
+                });
             }
         }
 
@@ -299,7 +299,7 @@
                 const registeredEvents = data.filter(event => registeredEventIds.includes(event.id));
                 eventContainer.innerHTML = registeredEvents.map(createEventCard).join("");
             } catch (error) {
-                console.error("Error fetching events:", error);
+                console.error("Error fetching events", error);
             }
         }
 
