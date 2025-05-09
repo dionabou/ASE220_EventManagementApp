@@ -9,7 +9,8 @@ const eventSchema = new mongoose.Schema({
   price:       { type: Number },
   image:       { type: String },
   description: { type: String },
-  organizer:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+  organizer:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }] 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', eventSchema);

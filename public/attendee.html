@@ -15,6 +15,14 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="d-flex justify-content-end p-3">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="modeToggle">
+      <label class="form-check-label" for="modeToggle" id="modeLabel">Switch to Light Mode</label>
+    </div>
+	
+  </div>
+
   <div class="container my-4">
     <h1 class="text-center mb-4">Browse Events</h1>
     <div id="notification" class="notification"></div>
@@ -32,6 +40,7 @@
     <div class="row row-cols-1 row-cols-md-3 g-4" id="reg-event-container"></div>
 
     <hr class="m-5" />
+	 <a href="favorites.html" class="btn btn-outline-info">My Favorites</a>
 
     <h2 id="other-event-header">Other Events</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4" id="event-container"></div>
@@ -83,7 +92,7 @@
   <script>
     const API = 'http://localhost:5000/api';
     const token = sessionStorage.getItem('token');
-    if (!token) location.href = 'index.html'; // redirect to login if missing
+    if (!token) location.href = 'index.html';
     const authFetch = (url, opts = {}) =>
       fetch(API + url, {
         ...opts,
@@ -136,6 +145,8 @@
                       data-id="${event._id}"
                     >Register</button>`
               }
+		 <i class="fa-regular fa-heart favorite-icon ms-2" data-id="${event._id}"></i>
+          <i class="fa-solid fa-share-nodes share-icon ms-2" data-id="${event._id}"></i>
             </div>
           </div>
         </div>`;
@@ -206,6 +217,52 @@
 
     viewRegistered();
     viewOthers();
+
+    const toggleInput = document.getElementById('modeToggle');
+  const label = document.getElementById('modeLabel');
+
+  function updateMode() {
+    if (toggleInput.checked) {
+      document.documentElement.setAttribute('data-bs-theme', 'light');
+      label.textContent = 'Switch to Dark Mode';
+    } else {
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
+      label.textContent = 'Switch to Light Mode';
+    }
+  }
+
+  toggleInput.addEventListener('change', updateMode);
+
+  const savedMode = localStorage.getItem('theme') || 'dark';
+  const isLight = savedMode === 'light';
+  toggleInput.checked = isLight;
+  updateMode();
+
+  toggleInput.addEventListener('change', () => {
+    localStorage.setItem('theme', toggleInput.checked ? 'light' : 'dark');
+  });
+  
+  let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+document.body.addEventListener('click', e => {
+  const eventId = e.target.dataset.id;
+  
+  if (e.target.classList.contains('favorite-icon')) {
+    if (favorites.includes(eventId)) {
+      favorites = favorites.filter(id => id !== eventId);
+      e.target.classList.remove('text-danger');
+    } else {
+      favorites.push(eventId);
+      e.target.classList.add('text-danger');
+    }
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }
+
+  if (e.target.classList.contains('share-icon')) {
+    const url = `${window.location.origin}?event=${eventId}`;
+    navigator.clipboard.writeText(url).then(() => alert('Link copied!'));
+  }
+});
   </script>
 </body>
 </html>

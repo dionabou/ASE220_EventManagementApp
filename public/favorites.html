@@ -1,0 +1,9 @@
+const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+const loadFavorites = async () => {
+  const events = await fetch(API + '/events').then(res => res.json());
+  const favEvents = events.filter(e => favorites.includes(e._id));
+  document.getElementById('fav-container').innerHTML = favEvents.map(createCard).join('');
+};
+
+loadFavorites();
