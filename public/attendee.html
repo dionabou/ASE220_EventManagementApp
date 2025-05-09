@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendee Dashboard</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="d-flex justify-content-end p-3">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="modeToggle">
+      <label class="form-check-label" for="modeToggle" id="modeLabel">Switch to Light Mode</label>
+    </div>
+	
+  </div>
+
+  <div class="container my-4">
+    <h1 class="text-center mb-4">Browse Events</h1>
+    <div id="notification" class="notification"></div>
+
+    <div class="mb-3">
+      <input
+        type="text"
+        id="searchBar"
+        class="form-control"
+        placeholder="Search for events..."
+      />
+    </div>
+
+    <h2 id="reg-event-header">Registered Events</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="reg-event-container"></div>
+
+    <hr class="m-5" />
+	 <a href="favorites.html" class="btn btn-outline-info">My Favorites</a>
+
+    <h2 id="other-event-header">Other Events</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="event-container"></div>
+
+    <div
+      class="modal fade"
+      id="detailsModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="detailsModalTitle">Event Details</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <img id="details-image" class="img-fluid mb-3" src="" alt="" />
+            </div>
+            <h5 id="detailsEventName"></h5>
+            <p id="detailsDescription" class="text-secondary mb-3"></p>
+            <p><strong>Location:</strong> <span id="detailsLocation"></span></p>
+            <p><strong>Capacity:</strong> <span id="detailsCapacity"></span></p>
+            <p><strong>Price:</strong> $<span id="detailsPrice"></span></p>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-primary"
+              id="modalRegisterBtn"
+            >Register</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = 'http://localhost:5000/api';
+    const token = sessionStorage.getItem('token');
+    if (!token) location.href = 'index.html';
+    const authFetch = (url, opts = {}) =>
+      fetch(API + url, {
+        ...opts,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+          ...(opts.headers || {})
+        }
+      });
+
+    const eventContainer = document.getElementById('event-container');
+    const regEventContainer = document.getElementById('reg-event-container');
+    const searchBar = document.getElementById('searchBar');
+    const notification = document.getElementById('notification');
+    const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    const detailsImage = document.getElementById('details-image');
+    const detailsEventName = document.getElementById('detailsEventName');
+    const detailsDescription = document.getElementById('detailsDescription');
+    const detailsLocation = document.getElementById('detailsLocation');
+    const detailsCapacity = document.getElementById('detailsCapacity');
+    const detailsPrice = document.getElementById('detailsPrice');
+    const modalRegisterBtn = document.getElementById('modalRegisterBtn');
+    let currentDetailId = null;
+
+    function showNotification(msg) {
+      notification.textContent = msg;
+      notification.style.display = 'block';
+      setTimeout(() => (notification.style.display = 'none'), 3000);
+    }
+
+    function createCard(event, isRegistered) {
+      return `
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img src="${event.image}" class="card-img-top" alt="${event.name}">
+            <div class="card-body">
+              <h5 class="card-title">${event.name}</h5>
+              <p><strong>Date:</strong> ${new Date(event.date).toLocaleString()}</p>
+              <p><strong>Location:</strong> ${event.location}</p>
+              <p><strong>Price:</strong> $${event.price}</p>
+              <button
+                class="btn btn-info view-details"
+                data-id="${event._id}"
+              >View Details</button>
+              ${
+                isRegistered
+                  ? ''
+                  : `<button
+                      class="btn btn-primary register-event ms-2"
+                      data-id="${event._id}"
+                    >Register</button>`
+              }
+		 <i class="fa-regular fa-heart favorite-icon ms-2" data-id="${event._id}"></i>
+          <i class="fa-solid fa-share-nodes share-icon ms-2" data-id="${event._id}"></i>
+            </div>
+          </div>
+        </div>`;
+    }
+
+
+    async function viewRegistered(filter = '') {
+      const regs = await authFetch('/users/registrations').then(r => r.json());
+      const filtered = regs.filter(e =>
+        e.name.toLowerCase().includes(filter.toLowerCase())
+      );
+      regEventContainer.innerHTML = filtered
+        .map(e => createCard(e, true))
+        .join('');
+    }
+
+  
+    async function viewOthers(filter = '') {
+      const all = await fetch(API + '/events').then(r => r.json());
+      const regs = await authFetch('/users/registrations').then(r => r.json());
+      const regIds = new Set(regs.map(e => e._id));
+      const others = all
+        .filter(e => !regIds.has(e._id))
+        .filter(e => e.name.toLowerCase().includes(filter.toLowerCase()));
+      eventContainer.innerHTML = others.map(e => createCard(e, false)).join('');
+    }
+
+  
+    async function setDetailModal(id) {
+      currentDetailId = id;
+      const event = await fetch(API + '/events').then(r => r.json()).then(arr => arr.find(e => e._id === id));
+      if (!event) return;
+      detailsImage.src = event.image;
+      detailsEventName.textContent = event.name;
+      detailsDescription.textContent = event.description;
+      detailsLocation.textContent = event.location;
+      detailsCapacity.textContent = event.capacity;
+      detailsPrice.textContent = event.price;
+      detailsModal.show();
+    }
+
+
+    modalRegisterBtn.addEventListener('click', async () => {
+      if (!currentDetailId) return;
+      await authFetch(`/events/${currentDetailId}/register`, { method: 'POST' });
+      detailsModal.hide();
+      showNotification('Registered successfully');
+      viewRegistered(searchBar.value);
+      viewOthers(searchBar.value);
+    });
+
+
+    document.body.addEventListener('click', e => {
+      if (e.target.matches('.view-details')) {
+        setDetailModal(e.target.dataset.id);
+      }
+      if (e.target.matches('.register-event')) {
+        const id = e.target.dataset.id;
+        setDetailModal(id);
+      }
+    });
+
+    searchBar.addEventListener('input', () => {
+      viewRegistered(searchBar.value);
+      viewOthers(searchBar.value);
+    });
+
+
+    viewRegistered();
+    viewOthers();
+
+    const toggleInput = document.getElementById('modeToggle');
+  const label = document.getElementById('modeLabel');
+
+  function updateMode() {
+    if (toggleInput.checked) {
+      document.documentElement.setAttribute('data-bs-theme', 'light');
+      label.textContent = 'Switch to Dark Mode';
+    } else {
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
+      label.textContent = 'Switch to Light Mode';
+    }
+  }
+
+  toggleInput.addEventListener('change', updateMode);
+
+  const savedMode = localStorage.getItem('theme') || 'dark';
+  const isLight = savedMode === 'light';
+  toggleInput.checked = isLight;
+  updateMode();
+
+  toggleInput.addEventListener('change', () => {
+    localStorage.setItem('theme', toggleInput.checked ? 'light' : 'dark');
+  });
+  
+  let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+document.body.addEventListener('click', e => {
+  const eventId = e.target.dataset.id;
+  
+  if (e.target.classList.contains('favorite-icon')) {
+    if (favorites.includes(eventId)) {
+      favorites = favorites.filter(id => id !== eventId);
+      e.target.classList.remove('text-danger');
+    } else {
+      favorites.push(eventId);
+      e.target.classList.add('text-danger');
+    }
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }
+
+  if (e.target.classList.contains('share-icon')) {
+    const url = `${window.location.origin}?event=${eventId}`;
+    navigator.clipboard.writeText(url).then(() => alert('Link copied!'));
+  }
+});
+  </script>
+</body>
+</html>

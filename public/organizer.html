@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Organizer Dashboard</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container my-4">
+    <h1 class="text-center mb-4">Manage Events</h1>
+
+    <div class="text-center mb-3">
+      <button id="btn-createEvent" class="btn btn-success">
+        Create a New Event
+      </button>
+    </div>
+
+    <div id="frmNewEventContainer" class="d-none">
+      <h2 class="mb-3" id="formHeader">Add an Event</h2>
+      <form id="frmCreateEvent">
+        <div class="row">
+          <div class="col-md-6 mb-2">
+            <label class="form-label"><strong>Event Name</strong></label>
+            <input type="text" id="eventName" class="form-control" required />
+          </div>
+          <div class="col-md-6 mb-2">
+            <label class="form-label"><strong>Type of Event</strong></label>
+            <input type="text" id="eventType" class="form-control" required />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-2">
+            <label class="form-label"><strong>Date & Time</strong></label>
+            <input
+              type="datetime-local"
+              id="eventDate"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-2">
+            <label class="form-label"><strong>Location</strong></label>
+            <input
+              type="text"
+              id="eventLocation"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-md-4 mb-2">
+            <label class="form-label"><strong>Max Attendees</strong></label>
+            <input
+              type="number"
+              id="eventCapacity"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 mb-2">
+            <label class="form-label"><strong>Price ($)</strong></label>
+            <input
+              type="number"
+              step="0.01"
+              id="eventPrice"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="col-md-8 mb-2">
+            <label class="form-label"><strong>Description</strong></label>
+            <textarea
+              id="eventDescription"
+              class="form-control"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 mb-2">
+            <label class="form-label"><strong>Image URL</strong></label>
+            <input
+              type="url"
+              id="eventImage"
+              class="form-control"
+              placeholder="Enter image URL"
+              required
+            />
+          </div>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary" id="saveEventBtn">
+            Save Event
+          </button>
+          <button
+            type="button"
+            id="cancelEventCreation"
+            class="btn btn-danger"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <h2>Your Events</h2>
+    <div
+      class="row row-cols-1 row-cols-md-3 g-4 mt-4"
+      id="created-event-container"
+    ></div>
+
+    <hr class="m-5"/>
+
+    <h2>Other Events</h2>
+    <div
+      class="row row-cols-1 row-cols-md-3 g-4 mt-4"
+      id="event-container"
+    ></div>
+  </div>
+
+  <div
+    class="modal fade"
+    id="detailsModal"
+    tabindex="-1"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Event Details</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <img id="details-image" class="img-fluid mb-3" src="" alt="" />
+          <h5 id="detailsEventName"></h5>
+          <p id="detailsDescription"></p>
+          <p><strong>Location:</strong> <span id="detailsLocation"></span></p>
+          <p><strong>Capacity:</strong> <span id="detailsCapacity"></span></p>
+          <p><strong>Price:</strong> $<span id="detailsPrice"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = 'http://localhost:5000/api';
+    const token = sessionStorage.getItem('token');
+    if (!token) location.href = 'index.html';
+
+    const authFetch = (url, opts = {}) =>
+      fetch(API + url, {
+        ...opts,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+          ...(opts.headers || {})
+        }
+      });
+
+    const btnCreateEvent = document.getElementById('btn-createEvent');
+    const frmContainer = document.getElementById('frmNewEventContainer');
+    const frm = document.getElementById('frmCreateEvent');
+    const cancelBtn = document.getElementById('cancelEventCreation');
+    const saveBtn = document.getElementById('saveEventBtn');
+    const formHeader = document.getElementById('formHeader');
+    const createdContainer = document.getElementById('created-event-container');
+    const otherContainer = document.getElementById('event-container');
+    const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    let editMode = false;
+    let editId = null;
+
+    function showForm(isEdit = false) {
+      frmContainer.classList.remove('d-none');
+      formHeader.textContent = isEdit ? 'Edit Event' : 'Add an Event';
+      saveBtn.textContent = isEdit ? 'Update Event' : 'Save Event';
+    }
+    function hideForm() {
+      frmContainer.classList.add('d-none');
+      frm.reset();
+      editMode = false;
+      editId = null;
+    }
+
+    btnCreateEvent.onclick = () => showForm();
+
+    cancelBtn.onclick = hideForm;
+
+    async function fetchMy() {
+      const data = await authFetch('/events/mine').then(r => r.json());
+      createdContainer.innerHTML = data.map(card(true)).join('');
+    }
+    async function fetchOthers() {
+      const all = await fetch(API + '/events').then(r => r.json());
+      const mine = await authFetch('/events/mine').then(r => r.json());
+      const mineIds = new Set(mine.map(e => e._id));
+      const others = all.filter(e => !mineIds.has(e._id));
+      otherContainer.innerHTML = others.map(card(false)).join('');
+    }
+
+    function card(isMine) {
+      return e => `
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img src="${e.image}" class="card-img-top" alt="${e.name}">
+            <div class="card-body">
+              <h5 class="card-title">${e.name}</h5>
+              <p><strong>Date:</strong> ${new Date(e.date).toLocaleString()}</p>
+              <p><strong>Location:</strong> ${e.location}</p>
+              <button
+                class="btn btn-info view-details"
+                data-id="${e._id}"
+              >View</button>
+              ${
+                isMine
+                  ? `<button class="btn btn-warning edit-event ms-1" data-id="${e._id}">Edit</button>
+                     <button class="btn btn-danger delete-event ms-1" data-id="${e._id}">Delete</button>`
+                  : ''
+              }
+            </div>
+          </div>
+        </div>`.trim();
+    }
+
+    frm.onsubmit = async e => {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('eventName').value,
+        type: document.getElementById('eventType').value,
+        date: document.getElementById('eventDate').value,
+        location: document.getElementById('eventLocation').value,
+        capacity: +document.getElementById('eventCapacity').value,
+        price: +document.getElementById('eventPrice').value,
+        description: document.getElementById('eventDescription').value,
+        image: document.getElementById('eventImage').value
+      };
+      if (editMode) {
+        await authFetch(`/events/${editId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await authFetch('/events', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+      }
+      hideForm();
+      fetchMy();
+      fetchOthers();
+    };
+
+
+    document.body.addEventListener('click', async ev => {
+      const id = ev.target.dataset.id;
+      if (ev.target.matches('.view-details')) {
+        const e = await fetch(API + '/events').then(r => r.json()).then(arr => arr.find(x => x._id === id));
+        document.getElementById('details-image').src = e.image;
+        document.getElementById('detailsEventName').textContent = e.name;
+        document.getElementById('detailsDescription').textContent = e.description;
+        document.getElementById('detailsLocation').textContent = e.location;
+        document.getElementById('detailsCapacity').textContent = e.capacity;
+        document.getElementById('detailsPrice').textContent = e.price;
+        detailsModal.show();
+      }
+      if (ev.target.matches('.edit-event')) {
+        editMode = true;
+        editId = id;
+        const e = await fetch(API + '/events').then(r => r.json()).then(arr => arr.find(x => x._id === id));
+        document.getElementById('eventName').value = e.name;
+        document.getElementById('eventType').value = e.type;
+        document.getElementById('eventDate').value = e.date.slice(0,16);
+        document.getElementById('eventLocation').value = e.location;
+        document.getElementById('eventCapacity').value = e.capacity;
+        document.getElementById('eventPrice').value = e.price;
+        document.getElementById('eventDescription').value = e.description;
+        document.getElementById('eventImage').value = e.image;
+        showForm(true);
+      }
+      if (ev.target.matches('.delete-event')) {
+        if (confirm('Delete this event?')) {
+          await authFetch(`/events/${id}`, { method: 'DELETE' });
+          fetchMy();
+          fetchOthers();
+        }
+      }
+    });
+
+    fetchMy();
+    fetchOthers();
+  </script>
+</body>
+</html>
